@@ -383,8 +383,12 @@ namespace eCommerceAPI.Repositories
 
                 try
                 {
+                    command = new SqlCommand();
+                    command.Transaction = transaction;
+                    command.Connection = (SqlConnection)_connection;
+
                     command.CommandText = "DELETE FROM EnderecosEntrega WHERE UsuarioId = @UsuarioId";
-                    command.Parameters.Add(usuario.Id);
+                    command.Parameters.AddWithValue("@UsuarioId", usuario.Id);
 
                     command.ExecuteNonQuery();
 
@@ -413,9 +417,34 @@ namespace eCommerceAPI.Repositories
                         endereco.UsuarioId = usuario.Id;
                     }
                 }
-                catch (Exception)
+                catch (Exception e)
                 {
                     throw new Exception("ERRO AO TENTAR ATUALIZAR ENDERECOS!!");
+                }
+
+                #endregion
+
+                #region Departamentos 
+
+                command = new SqlCommand();
+                command.Connection = (SqlConnection)_connection;
+                command.Transaction = transaction;
+
+                command.CommandText = "DELETE FROM UsuariosDepartamentos WHERE UsuarioId = @UsuarioId";
+                command.Parameters.AddWithValue("@UsuarioId", usuario.Id);
+                command.ExecuteNonQuery();
+
+                foreach (var departamento in usuario.Departamentos)
+                {
+                    command = new SqlCommand();
+                    command.Transaction = transaction;
+                    command.Connection = (SqlConnection)_connection;
+
+                    command.CommandText = "INSERT INTO UsuariosDepartamentos (UsuarioId, DepartamentoId) VALUES (@UsuarioId, @DepartamentoId); SELECT CAST(scope_identity() AS int)";
+                    command.Parameters.AddWithValue("@UsuarioId", usuario.Id);
+                    command.Parameters.AddWithValue("@DepartamentoId", departamento.Id);
+
+                    command.ExecuteNonQuery();
                 }
 
                 #endregion
